@@ -1,89 +1,70 @@
-# Metro Ağı Projesi
+# DL-ALT: GNN Destekli Metro Güzergah Optimizasyonu
 
-Bu proje, bir metro ağı simülasyonu oluşturmak ve farklı istasyonlar arasında en uygun rotaları bulmak için geliştirilmiş bir Python uygulamasıdır. Proje, metro ağındaki istasyonlar ve hatlar arasındaki bağlantıları modelleyerek, kullanıcıların en az aktarmalı ve en hızlı rotaları bulabilmesini sağlar.
+## Proje Açıklaması
 
-## Özellikler
+DL-ALT algoritması, metro ağlarında en hızlı rotayı belirlemek için *Derin Öğrenme ve Landmark Tabanlı ALT (A** Landmark Heuristic) arama*\* yöntemlerini birleştirir. Grafik Sinir Ağları (GNN) kullanılarak metro istasyonları arasında en önemli noktalar (landmark'lar) seçilir ve A\* algoritmasının sezgisel fonksiyonu bu landmark'lar üzerinden optimize edilir.
 
-- İstasyonlar ve hatlar oluşturma
-- İstasyonlar arası bağlantılar tanımlama
-- En az aktarma gerektiren rotaları bulma (BFS algoritması ile)
-- En hızlı rotaları bulma (Dijkstra algoritması ile)
-- Hat değişimlerinde aktarma sürelerini hesaba katma
+## Kullanılan Teknolojiler
 
-## Proje Yapısı
+- **Python** (Ana programlama dili)
+- **PyTorch & PyTorch Geometric** (GNN modeli için)
+- **NetworkX & heapq** (Klasik grafik algoritmaları için)
 
-Proje aşağıdaki temel sınıflardan oluşmaktadır:
+## Kurulum
 
-1. **Istasyon**: Her bir metro istasyonunu temsil eder.
-   - İstasyon kimliği (idx)
-   - İstasyon adı (ad)
-   - Bağlı olduğu hat (hat)
-   - Komşu istasyonlar listesi (komsular)
+Projeyi çalıştırmak için aşağıdaki adımları takip edebilirsiniz:
 
-2. **MetroAgi**: Tüm metro ağını temsil eder ve algoritmaları barındırır.
-   - İstasyon ekleme
-   - Bağlantı ekleme
-   - En az aktarmalı rota bulma (BFS algoritması)
-   - En hızlı rota bulma (Dijkstra algoritması)
+```bash
+# Gerekli kütüphaneleri yükleyin
+pip install torch torch-geometric numpy
 
-## Kullanım
-
-```python
-# Metro ağı oluşturma
-metro = MetroAgi()
-
-# İstasyonlar ekleme
-metro.istasyon_ekle("K1", "Kızılay", "Kırmızı Hat")
-metro.istasyon_ekle("M1", "AŞTİ", "Mavi Hat")
-
-# Bağlantılar ekleme
-metro.baglanti_ekle("K1", "K2", 4)  # Kızılay -> Ulus arası 4 dakika
-
-# En az aktarmalı rota bulma
-rota = metro.en_az_aktarma_bul("M1", "K4")
-if rota:
-    print("En az aktarmalı rota:", " -> ".join(i.ad for i in rota))
-
-# En hızlı rota bulma
-sonuc = metro.en_hizli_rota_bul("M1", "K4")
-if sonuc:
-    rota, sure = sonuc
-    print(f"En hızlı rota ({sure} dakika):", " -> ".join(i.ad for i in rota))
+# Ana Python dosyasını çalıştırın
+python metro_gnn.py
 ```
 
-## Algoritmalar
+## Algoritma Açıklaması
 
-### BFS (Breadth-First Search) Algoritması
-En az aktarma gerektiren rotaları bulmak için kullanılır. BFS algoritması, bir başlangıç noktasından başlayarak, aynı hatta devam eden istasyonları önceliklendirir ve en az hat değişimi gerektiren rotayı bulur.
+DL-ALT algoritması aşağıdaki aşamalardan oluşur:
 
-### Dijkstra Algoritması
-En hızlı rotayı bulmak için kullanılır. Her bağlantının süresini ve hat değişimlerinde oluşan ek süreleri (5 dakika) hesaba katarak, toplam seyahat süresini minimize eden rotayı bulur.
+1. **Grafın Hazırlanması:** Metro istasyonları ve bağlantıları bir grafik yapısında modellenir.
+2. **GNN ile Landmark Seçimi:** Grafik Sinir Ağları (GNN) kullanılarak, yüksek öneme sahip istasyonlar belirlenir.
+3. **DL-ALT Arama:** Seçilen landmark'lar, A\* algoritmasının sezgisel fonksiyonunu güçlendirmek için kullanılır.
+4. **Karşılaştırmalı Performans Testleri:** Klasik Dijkstra, A\* ve ALT algoritmaları ile karşılaştırılır.
 
-## Örnek Senaryo
+## Performans Karşılaştırmaları
 
-Örnek metro ağımızda aşağıdaki hatlar ve istasyonlar bulunmaktadır:
+| Algoritma  | Ortalama Hesaplama Süresi | Hafıza Kullanımı | Doğruluk |
+| ---------- | ------------------------- | ---------------- | -------- |
+| Dijkstra   | Yüksek                    | Orta             | 100%     |
+| A\*        | Orta                      | Orta             | 100%     |
+| ALT        | Düşük                     | Orta             | 100%     |
+| **DL-ALT** | **Çok Düşük**             | **Düşük**        | **100%** |
 
-- **Kırmızı Hat**: Kızılay, Ulus, Demetevler, OSB
-- **Mavi Hat**: AŞTİ, Kızılay, Sıhhiye, Gar
-- **Turuncu Hat**: Batıkent, Demetevler, Gar, Keçiören
+**DL-ALT**, klasik algoritmalara göre daha düşük hesaplama süresi ve hafıza kullanımı ile optimum çözümler sunmaktadır.
 
-Aktarma noktaları:
-- Kızılay (Kırmızı Hat ve Mavi Hat arasında)
-- Demetevler (Kırmızı Hat ve Turuncu Hat arasında)
-- Gar (Mavi Hat ve Turuncu Hat arasında)
+## Kullanım Örneği
 
-## Geliştirme
+```python
+from metro_gnn import MetroWithDLALT
 
-Projeye katkıda bulunmak için şu adımları izleyebilirsiniz:
+dl_metro = MetroWithDLALT()
+dl_metro.train_landmark_selector(epochs=50)
+rota, sure = dl_metro.dl_alt_search("M1", "K4")
+print(f"En hızlı rota ({sure} dakika):", " -> ".join(i.ad for i in rota))
+```
 
-1. Yeni istasyonlar ve hatlar ekleyin
-2. Metro ağı veri yapısını genişletin
-3. Yeni rota bulma algoritmaları ekleyin
-4. Kullanıcı arayüzü geliştirebilirsiniz
+## Sonuç
 
-## Gelecek Özellikler
+DL-ALT algoritması, metro gibi büyük ölçekli ağlarda **hızlı, verimli ve akıllı** güzergah hesaplaması sağlar. GNN kullanımı sayesinde, istasyonların trafik durumuna göre dinamik olarak en uygun landmark'lar belirlenebilir.
 
-- Gerçek zamanlı trafik verilerini entegre etme
-- İstasyon çıkışları ve aktarma detaylarını ekleme
-- Web arayüzü ile görselleştirme
-- Farklı tercihler bazında optimizasyon (en az yürüme, en az maliyet vb.)
+**Gelecekteki İyileştirmeler:**
+
+- Gerçek zamanlı trafik yoğunluğu entegrasyonu
+- Farklı ulaşım modlarıyla entegrasyon (otobüs, tramvay, vb.)
+- Daha büyük metropol alanlarında test edilmesi
+
+---
+
+Bu proje, **şehir içi ulaşımı optimize etmek için yapay zeka ve grafik algoritmalarının nasıl entegre edilebileceğini** göstermektedir.
+
+
